@@ -1,0 +1,4 @@
+company_size,total_customers,churned_customers,churn_rate_pct
+SMB,5926,468,7.90
+Mid-Market,4035,163,4.04
+Enterprise,2039,53,2.60

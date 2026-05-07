@@ -34,3 +34,20 @@
 
 \- Pushed to GitHub
 
+## Day 3 — SQL Analysis
+
+### What I did:
+- Wrote churn rate analysis SQL
+- Analyzed churn by company size, industry, plan type
+- Exported results to CSV
+
+### Key Findings:
+- Overall churn rate = 5.7%
+- SMB churn = 7.9% (highest)
+- Enterprise churn = 2.6% (lowest)
+- Industry has minimal impact on churn
+- Enterprise annual customers surprisingly churn more
+
+### Business Recommendation:
+- Focus CS team on SMB segment
+- Improve onboarding for Enterprise annual customers
