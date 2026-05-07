@@ -51,3 +51,12 @@
 ### Business Recommendation:
 - Focus CS team on SMB segment
 - Improve onboarding for Enterprise annual customers
+
+### MRR Waterfall Key Findings:
+- Total ARR = $42.9 Million
+- Average MRR per customer = $316
+- NRR = 94.5% (below 100% benchmark)
+- Enterprise plans = 77% of total MRR
+- Starter plans = only 4.69% of MRR
+- August 2025 = worst churn month
+- SMB drives 48% of MRR but churns at 7.9%
