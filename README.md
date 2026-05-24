@@ -620,7 +620,7 @@
 
 # |---|---|
 
-# | !\[Churn Overview](outputs/01\_churn\_overview.png) | SMB churn (7.9%) is 3x Enterprise (2.6%) |
+# | outputs/01_churn_overview.png | SMB churn (7.9%) is 3x Enterprise (2.6%) |
 
 # | !\[MRR Analysis](outputs/02\_mrr\_analysis.png) | Enterprise plans = 77% of MRR despite 17% of customers |
 
