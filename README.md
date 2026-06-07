@@ -1,792 +1,288 @@
- \# SaaS Churn Analytics — Revenue Intelligence \& Behavioral Early-Warning System
+# SaaS Churn Analytics — Revenue Intelligence & Behavioral Early-Warning System
 
-# 
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16.13-336791?style=flat-square&logo=postgresql&logoColor=white)
+![Python](https://img.shields.io/badge/Python-3.10-3776AB?style=flat-square&logo=python&logoColor=white)
+![pandas](https://img.shields.io/badge/pandas-2.3-150458?style=flat-square&logo=pandas&logoColor=white)
+![Jupyter](https://img.shields.io/badge/Jupyter-Notebook-F37626?style=flat-square&logo=jupyter&logoColor=white)
+![Status](https://img.shields.io/badge/Status-Complete-2ECC71?style=flat-square)
 
-# <div align="center">
+> End-to-end analytics project simulating real analyst work inside a B2B SaaS company — from schema design and data generation to behavioral health scoring, statistical validation, cohort analysis, customer segmentation, and churn prediction modeling.
 
-# 
+---
 
-# !\[PostgreSQL](https://img.shields.io/badge/PostgreSQL-16.13-336791?style=flat-square\&logo=postgresql\&logoColor=white)
+## The Problem
 
-# !\[Python](https://img.shields.io/badge/Python-3.10-3776AB?style=flat-square\&logo=python\&logoColor=white)
+Most churn analyses start with a cancellation event. By then, the intervention window is already shrinking.
 
-# !\[Pandas](https://img.shields.io/badge/pandas-2.3-150458?style=flat-square\&logo=pandas\&logoColor=white)
+This project investigates a different question:
 
-# !\[Jupyter](https://img.shields.io/badge/Jupyter-Notebook-F37626?style=flat-square\&logo=jupyter\&logoColor=white)
+**How early can behavioral disengagement be detected — and can it be quantified in revenue terms before it appears in financial reports?**
 
-# !\[Status](https://img.shields.io/badge/Status-Active-2ECC71?style=flat-square)
+Working with a simulated B2B SaaS environment (SubscribeIQ — fictional), this project builds a full analytical stack: from raw event-level data to a prioritised, dollar-quantified account intervention list that a Customer Success team can act on the same day.
 
-# 
+---
 
-# \*\*End-to-end analytics project simulating real analyst work inside a B2B SaaS company.\*\*  
+## Business Context
 
-# From schema design and synthetic data generation to behavioral health scoring, statistical validation, and board-level revenue reporting.
+| Parameter | Value |
+|---|---|
+| Company | SubscribeIQ (simulated B2B SaaS) |
+| Total Customers | 12,000 |
+| Total ARR | $42.8 Million |
+| Monthly Churn Rate | 5.7% (benchmark: 2–4%) |
+| Net Revenue Retention | 94.5% (benchmark: >100%) |
+| Product Events Analyzed | 3,113,813 |
+| Analysis Period | Jan 2022 – Apr 2026 |
 
-# 
+---
 
-# \[View SQL Scripts](#sql-analysis) · \[View Notebooks](#python-analysis) · \[Key Findings](#key-findings) · \[Reproduce Locally](#reproduce-locally)
+## Project Structure
+saas-churn-analytics/
+├── src/
+│   └── generate_data.py              # Synthetic data generation
+├── sql/
+│   ├── 01_churn_rate_analysis.sql    # Churn by segment, plan, industry
+│   ├── 02_mrr_waterfall.sql          # MRR movements and NRR
+│   ├── 03_customer_health_score.sql  # Behavioral health scoring
+│   ├── 04_revenue_at_risk.sql        # Dollar-quantified risk
+│   └── 05_channel_performance.sql   # Acquisition channel quality
+├── notebooks/
+│   ├── 01_eda.ipynb                  # EDA + behavioral analysis
+│   ├── 02_cohort_analysis.ipynb      # 12-month cohort heatmap
+│   ├── 03_segmentation.ipynb         # RFM + K-Means clustering
+│   └── 04_churn_model.ipynb          # Logistic regression model
+├── outputs/                          # All charts saved here
+└── README.md
 
-# 
+---
 
-# </div>
+## Database Schema
 
-# 
+Star schema with 6 tables in PostgreSQL 16.
 
-# \---
+| Table | Rows | Description |
+|---|---|---|
+| dim_customers | 12,000 | Customer profiles |
+| dim_plans | 6 | Pricing plans |
+| dim_channels | 8 | Acquisition channels |
+| dim_dates | 1,581 | Date dimension |
+| fact_subscriptions | 12,000 | Core subscription data |
+| fact_events | 3,113,813 | Product usage events |
 
-# 
+---
 
-# \## The Problem This Project Solves
+## Key Findings
 
-# 
+### 1. Churn is a segmentation problem
 
-# Most churn analyses start with a cancellation event.
+| Segment | Churn Rate | Customers | ARR at Risk |
+|---|---|---|---|
+| SMB | 7.9% | 5,926 | $561K |
+| Mid-Market | 4.04% | 4,035 | — |
+| Enterprise | 2.6% | 2,039 | — |
 
-# 
+SMB represents 68% of all churn while generating 48.6% of MRR. A 2% reduction in SMB churn recovers approximately $170K ARR annually.
 
-# By then, the intervention window is already shrinking.
+---
 
-# 
+### 2. Nearly half of ARR is behaviorally at risk
 
-# This project investigates a different question:
+| Category | ARR | Share |
+|---|---|---|
+| Total ARR | $42.8M | 100% |
+| Behaviorally at risk | $21.1M | 49% |
+| Critical (health score < 40) | $11.2M | 26% |
 
-# 
+This revenue has not churned yet. It still appears healthy in financial reports. Behavioral signals are the only early-warning system.
 
-# > \*\*How early can behavioral disengagement be detected — and can it be quantified in revenue terms before it appears in financial reports?\*\*
+---
 
-# 
+### 3. Annual billing masks product failure for up to 11 months
 
-# Working with a simulated B2B SaaS environment (\*\*SubscribeIQ\*\* — fictional), this project builds a full analytical stack: from raw event-level behavioral data to a prioritised, dollar-quantified account intervention list that a Customer Success team can act on the same day.
+| Plan | Annual Churn | Monthly Churn | Delta |
+|---|---|---|---|
+| Enterprise | 6.45% | 4.58% | +1.87% |
+| Growth | 6.23% | 5.59% | +0.64% |
+| Starter | 6.31% | 5.08% | +1.23% |
+| Overall | 6.33% | 5.08% | +1.25% |
 
-# 
+Annual customers churn more across every plan tier. Hypothesis: customers commit during a sales cycle before experiencing product value — and disengage quietly for up to 11 months before non-renewal.
 
-# \---
+---
 
-# 
+### 4. API adoption is the strongest retention predictor
 
-# \## Business Context
+| Signal | Active | Churned | Ratio | p-value |
+|---|---|---|---|---|
+| Login count | 34.0 | 4.0 | 8.5x | <0.001 |
+| API calls | 33.0 | 4.0 | 8.2x | <0.001 |
+| Active days | 232.0 | 34.0 | 6.8x | <0.001 |
+| Total events | 279.0 | 39.0 | 7.2x | <0.001 |
+| Unique features | 8.0 | 8.0 | 1.0x | <0.001 |
 
-# 
+Notable: Churned customers explored the same number of features as active customers — they simply never used any of them deeply enough to form habits. The onboarding problem is not feature discovery. It is value realization depth.
 
-# | Parameter | Value |
+---
 
-# |---|---|
+### 5. Technical issues drive more churn than price
 
-# | Company | SubscribeIQ (simulated B2B SaaS) |
+| Churn Reason | Count | Share |
+|---|---|---|
+| Technical issues | 85 | 12.4% |
+| Missing features | 76 | 11.1% |
+| Switched to competitor | 75 | 11.0% |
+| Too expensive | 70 | 10.2% |
+| No longer needed | 70 | 10.2% |
 
-# | Total Customers | 12,000 |
+Most SaaS companies optimize for pricing flexibility. This data suggests product stability is the higher-leverage intervention.
 
-# | Total ARR | $42.8 Million |
+---
 
-# | Monthly Churn Rate | 5.7% (industry benchmark: 2–4%) |
+### 6. Channel quality is a three-way tradeoff
 
-# | Net Revenue Retention | 94.5% (benchmark: >100%) |
+| Channel | Churn Rate | Avg MRR | LTV |
+|---|---|---|---|
+| Partner | 4.32% | $310 | $2,433 |
+| Paid Google | 5.31% | $311 | $2,561 |
+| Paid LinkedIn | 5.77% | $331 | $3,237 |
+| Cold Outbound | 6.15% | $320 | $3,282 |
 
-# | Data Volume | 3,113,813 product usage events |
+No single channel wins on all three dimensions simultaneously.
 
-# | Analysis Period | Jan 2022 – Apr 2026 |
+---
 
-# 
+### 7. Cohort retention is stable but has a critical window
 
-# The Head of Revenue has escalated churn as a P0 priority. The ask to the analytics team:
+- Average Month-12 retention across 40 cohorts: 96.4%
+- Sharpest churn drop occurs at Month 2-4
+- Best cohort (2024-03): 98.1% at Month 12
+- Worst cohort (2024-02): 93.3% at Month 12
+- Partner channel best Month-12 retention: 97.3%
+- Referral channel worst Month-12 retention: 95.8%
 
-# 
+---
 
-# 1\. Identify \*\*which customers\*\* are most at risk — before cancellation
+### 8. High Value segment controls 53% of MRR at only 29% engagement
 
-# 2\. Quantify \*\*exactly how much revenue\*\* is at risk by segment
+| Segment | Customers | Share | Total MRR | MRR Share | Avg Engagement |
+|---|---|---|---|---|---|
+| Champions | 1,996 | 17.6% | $636K | 17.8% | 88.8 |
+| High Value | 2,628 | 23.2% | $1.9M | 53.3% | 43.7 |
+| Starter | 4,109 | 36.3% | $443K | 12.4% | 49.1 |
+| At Risk | 2,583 | 22.8% | $592K | 16.6% | 19.8 |
 
-# 3\. Determine \*\*what behavioral signals\*\* predict churn earliest
+The High Value segment pays $726 avg MRR but logs in only 12 days per 90-day period. Half the company's revenue sits with customers who are not deeply engaged.
 
-# 4\. Deliver \*\*actionable recommendations\*\* with financial impact estimates
+---
 
-# 
+## Visualizations
 
-# \---
+### Churn Overview
+![Churn Overview](outputs/01_churn_overview.png)
 
-# 
+### MRR Analysis
+![MRR Analysis](outputs/02_mrr_analysis.png)
 
-# \## Project Architecture
+### Channel Performance
+![Channel Performance](outputs/03_channel_performance.png)
 
-# 
+### Annual vs Monthly Churn
+![Annual vs Monthly Churn](outputs/04_annual_vs_monthly_churn.png)
 
-# ```
+### Behavioral Signals: Active vs Churned
+![Behavioral Signals](outputs/05_behavioral_analysis.png)
 
-# saas-churn-analytics/
+### Cohort Retention Heatmap
+![Cohort Retention](outputs/06_cohort_retention_heatmap.png)
 
-# │
+### Channel Cohort Retention Curves
+![Channel Cohort](outputs/07_channel_cohort_retention.png)
 
-# ├── src/
+### Customer Segmentation
+![Segmentation](outputs/09_customer_segments.png)
 
-# │   └── generate\_data.py          # Synthetic data generation engine
+### Churn Prediction Model
+![Churn Model](outputs/10_churn_model.png)
 
-# │                                 # Faker + psycopg2 + controlled distributions
+---
 
-# │
+## Business Recommendations
 
-# ├── sql/
+| Priority | Recommendation | Impact |
+|---|---|---|
+| P0 | Weekly Revenue at Risk report — CS team acts on health score list | $21M protected |
+| P1 | Automated low-touch re-engagement for SMB segment | ~$170K ARR saved |
+| P1 | 90-day value realization program for annual plan customers | ~$196K ARR saved |
+| P1 | Immediate CSM outreach for High Value segment (engagement < 40) | $1.9M MRR protected |
+| P2 | Prioritize product stability over new features | Reduce churn 1–2% |
+| P2 | Redesign onboarding to drive API activation within 14 days | Improve retention |
+| P2 | Proactive CS outreach at Month 2-4 for all cohorts | Catch churn cliff early |
+| P3 | Expand partner ecosystem — lowest churn channel at 4.32% | Improve NRR |
 
-# │   ├── 01\_churn\_rate\_analysis.sql    # Churn by segment, plan, industry
+---
 
-# │   ├── 02\_mrr\_waterfall.sql          # MRR movements, NRR, ARR breakdown
+## How to Reproduce
 
-# │   ├── 03\_customer\_health\_score.sql  # Behavioral health scoring model
+```bash
+# Clone
+git clone https://github.com/VinayDera/saas-churn-analytics.git
+cd saas-churn-analytics
 
-# │   ├── 04\_revenue\_at\_risk.sql        # Dollar-quantified risk classification
+# Setup
+python -m venv venv
+venv\Scripts\activate
+pip install pandas numpy matplotlib seaborn scikit-learn sqlalchemy psycopg2-binary faker jupyter scipy
 
-# │   └── 05\_channel\_performance.sql   # Acquisition channel quality analysis
+# Database
+psql -U postgres -c "CREATE DATABASE saas_churn;"
 
-# │
+# Generate data (~5 minutes)
+python src/generate_data.py
 
-# ├── notebooks/
+# Run notebooks
+jupyter notebook notebooks/
+```
 
-# │   ├── 01\_eda.ipynb                  # EDA, behavioral analysis, stat tests
+Expected output:
 
-# │   ├── 02\_cohort\_analysis.ipynb      # 12-month cohort retention heatmap
+dim_dates         :    1,581 rows
+dim_channels      :        8 rows
+dim_plans         :        6 rows
+dim_customers     :   12,000 rows
+fact_subscriptions:   12,000 rows
+fact_events       :3,113,813 rows
 
-# │   └── 03\_segmentation.ipynb         # RFM scoring + K-Means segmentation
+---
 
-# │
+## Tech Stack
 
-# ├── outputs/
+| Tool | Purpose |
+|---|---|
+| PostgreSQL 16 | Star schema database |
+| Python 3.10 | Data generation and analysis |
+| pandas | Data manipulation |
+| matplotlib + seaborn | Visualizations |
+| scikit-learn | K-Means clustering + logistic regression |
+| scipy.stats | Statistical significance testing |
+| Jupyter | Interactive analysis |
+| GitHub | Version control |
 
-# │   ├── 01\_churn\_overview.png
+---
 
-# │   ├── 02\_mrr\_analysis.png
+## Project Status
 
-# │   ├── 03\_channel\_performance.png
+- [x] Database schema and data generation (3.1M rows)
+- [x] SQL analysis — 5 scripts
+- [x] Python EDA — behavioral analysis and statistical tests
+- [x] Cohort retention analysis — 40 cohorts x 12 months
+- [x] Customer segmentation — RFM + K-Means (4 segments)
+- [x] Churn prediction model — logistic regression
+- [x] Visualizations — 10 charts
 
-# │   ├── 04\_annual\_vs\_monthly\_churn.png
+---
 
-# │   └── 05\_behavioral\_analysis.png
+## Author
 
-# │
+**Vinay Dera** — Junior Data Analyst
 
-# ├── notes.md                          # Project journal + learning log
-
-# └── README.md
-
-# ```
-
-# 
-
-# \---
-
-# 
-
-# \## Database Design
-
-# 
-
-# Star schema built in PostgreSQL 16 — modeled on a real SaaS data warehouse pattern.
-
-# 
-
-# ```
-
-# &#x20;                       ┌─────────────────┐
-
-# &#x20;                       │   dim\_dates     │
-
-# &#x20;                       │  1,581 rows     │
-
-# &#x20;                       └────────┬────────┘
-
-# &#x20;                                │
-
-# ┌──────────────┐    ┌────────────▼──────────────┐    ┌──────────────────┐
-
-# │  dim\_plans   │    │    fact\_subscriptions      │    │  dim\_channels    │
-
-# │  6 rows      ├────►      12,000 rows           ◄────┤  8 rows          │
-
-# └──────────────┘    │  (core business fact table)│    └──────────────────┘
-
-# &#x20;                   └────────────┬──────────────┘
-
-# &#x20;                                │
-
-# &#x20;                   ┌────────────▼──────────────┐
-
-# &#x20;                   │     dim\_customers          │
-
-# &#x20;                   │      12,000 rows           │
-
-# &#x20;                   └────────────┬──────────────┘
-
-# &#x20;                                │
-
-# &#x20;                   ┌────────────▼──────────────┐
-
-# &#x20;                   │      fact\_events           │
-
-# &#x20;                   │    3,113,813 rows          │
-
-# &#x20;                   │  (behavioral event log)    │
-
-# &#x20;                   └───────────────────────────┘
-
-# ```
-
-# 
-
-# \*\*Design decisions:\*\*
-
-# \- `fact\_events` intentionally kept denormalized for fast behavioral aggregation
-
-# \- Churn patterns baked into generation logic (SMB 8%, Mid-Market 4%, Enterprise 2%) to simulate real-world signal distribution
-
-# \- Controlled random seed ensures reproducibility across runs
-
-# 
-
-# \---
-
-# 
-
-# \## SQL Analysis
-
-# 
-
-# Five production-grade SQL scripts — each answering a specific business question using real analytical patterns.
-
-# 
-
-# \### Query 1 — Churn Rate Analysis
-
-# \*\*Business question:\*\* Which segments churn the most and why does it matter financially?
-
-# 
-
-# Techniques: `GROUP BY`, `CASE WHEN`, multi-table `JOIN`, window functions (`OVER()`), percentage calculations
-
-# 
-
-# ```sql
-
-# \-- Churn rate by company size with window function for % share
-
-# SELECT
-
-# &#x20;   c.company\_size,
-
-# &#x20;   COUNT(\*)                                          AS total\_customers,
-
-# &#x20;   SUM(CASE WHEN s.status = 'churned' THEN 1 ELSE 0 END) AS churned,
-
-# &#x20;   ROUND(SUM(CASE WHEN s.status = 'churned' THEN 1 ELSE 0 END)
-
-# &#x20;         \* 100.0 / COUNT(\*), 2)                     AS churn\_rate\_pct
-
-# FROM fact\_subscriptions s
-
-# JOIN dim\_customers c ON s.customer\_id = c.customer\_id
-
-# GROUP BY c.company\_size
-
-# ORDER BY churn\_rate\_pct DESC;
-
-# ```
-
-# 
-
-# \### Query 2 — MRR Waterfall
-
-# \*\*Business question:\*\* How is revenue moving — and is growth masking underlying decay?
-
-# 
-
-# Techniques: `DATE\_TRUNC`, `LAG()`, `SUM CASE WHEN`, NRR calculation
-
-# 
-
-# \### Query 3 — Customer Health Scoring
-
-# \*\*Business question:\*\* Which specific accounts are most likely to churn in the next 30 days?
-
-# 
-
-# Techniques: Multi-CTE chain, behavioral signal weighting, `EXTRACT`, risk classification via `CASE WHEN`
-
-# 
-
-# ```sql
-
-# \-- Health score formula
-
-# LEAST(100, ROUND(
-
-# &#x20;   (active\_days \* 2)          -- recency signal
-
-# &#x20;   + (feature\_variety \* 5)    -- breadth of usage
-
-# &#x20;   + (total\_sessions \* 0.5)   -- engagement frequency
-
-# &#x20;   + (api\_usage \* 3)          -- depth signal (strongest predictor)
-
-# &#x20;   - (days\_since\_active \* 1.5)-- inactivity penalty
-
-# , 0)) AS health\_score
-
-# ```
-
-# 
-
-# \### Query 4 — Revenue at Risk
-
-# \*\*Business question:\*\* Exactly how much ARR is exposed — and who owns those accounts?
-
-# 
-
-# Techniques: Nested CTEs, `LEAST()`, dollar quantification, CSM-level attribution
-
-# 
-
-# \### Query 5 — Channel Performance
-
-# \*\*Business question:\*\* Which acquisition channel produces the most valuable, longest-retained customers?
-
-# 
-
-# Techniques: LTV calculation, quality scoring formula, cross-segment analysis, tenure analysis
-
-# 
-
-# \---
-
-# 
-
-# \## Python Analysis
-
-# 
-
-# \### Notebook 01 — Exploratory Data Analysis
-
-# 
-
-# \*\*Data quality audit results:\*\*
-
-# 
-
-# | Table | Rows | Duplicates | Nulls |
-
-# |---|---|---|---|
-
-# | dim\_customers | 12,000 | 0 | None |
-
-# | fact\_subscriptions | 12,000 | 0 | end\_date (expected), churn\_reason (expected) |
-
-# | fact\_events | 500,000 | 0 | None |
-
-# 
-
-# > Both null columns are \*\*business logic nulls\*\* — not data quality issues. `end\_date` is null for active customers; `churn\_reason` is null for customers who didn't complete an exit survey.
-
-# 
-
-# \*\*Behavioral feature engineering:\*\*
-
-# 
-
-# ```python
-
-# customer\_behavior = events.groupby('customer\_id').agg(
-
-# &#x20;   total\_events    = ('event\_id',     'count'),
-
-# &#x20;   unique\_features = ('feature\_used', 'nunique'),
-
-# &#x20;   unique\_sessions = ('session\_id',   'nunique'),
-
-# &#x20;   active\_days     = ('event\_ts',     lambda x: x.dt.date.nunique()),
-
-# &#x20;   api\_calls       = ('feature\_used', lambda x: (x == 'api').sum()),
-
-# &#x20;   login\_count     = ('event\_type',   lambda x: (x == 'login').sum()),
-
-# )
-
-# ```
-
-# 
-
-# \---
-
-# 
-
-# \## Key Findings
-
-# 
-
-# \### Finding 1 — Churn is a segmentation problem, not a product problem
-
-# 
-
-# | Segment | Churn Rate | Customers | ARR Impact |
-
-# |---|---|---|---|
-
-# | SMB | \*\*7.9%\*\* | 5,926 | $561K at risk |
-
-# | Mid-Market | 4.04% | 4,035 | — |
-
-# | Enterprise | \*\*2.6%\*\* | 2,039 | — |
-
-# 
-
-# SMB customers represent \*\*68% of all churn\*\* while generating 48.6% of MRR. The leverage point is clear: a 2% reduction in SMB churn recovers approximately $170K ARR annually.
-
-# 
-
-# \---
-
-# 
-
-# \### Finding 2 — Nearly half of ARR is behaviorally at risk
-
-# 
-
-# ```
-
-# Total ARR              $42.8M   (100%)
-
-# ARR showing disengagement signals  $21.1M   (49%)
-
-# Critical ARR (health score < 40)   $11.2M   (26%)
-
-# ```
-
-# 
-
-# This revenue is not yet churned. It is still appearing in MRR reports as healthy. Behavioral signals are the only early-warning system.
-
-# 
-
-# \---
-
-# 
-
-# \### Finding 3 — Annual billing masks product failure for up to 11 months
-
-# 
-
-# Across every plan tier, annual customers churn at a higher rate than monthly:
-
-# 
-
-# | Plan | Annual Churn | Monthly Churn | Delta |
-
-# |---|---|---|---|
-
-# | Enterprise | 6.45% | 4.58% | +1.87% |
-
-# | Growth | 6.23% | 5.59% | +0.64% |
-
-# | Starter | 6.31% | 5.08% | +1.23% |
-
-# | \*\*Overall\*\* | \*\*6.33%\*\* | \*\*5.08%\*\* | \*\*+1.25%\*\* |
-
-# 
-
-# \*\*Hypothesis:\*\* Annual customers commit during a sales cycle before experiencing the product's value. Monthly customers face a renewal decision every 30 days — forcing earlier CS attention and faster product iteration feedback.
-
-# 
-
-# \---
-
-# 
-
-# \### Finding 4 — API adoption is the strongest single predictor of retention
-
-# 
-
-# | Behavioral Signal | Active (median) | Churned (median) | Ratio | p-value |
-
-# |---|---|---|---|---|
-
-# | Login count | 34.0 | 4.0 | 8.5x | <0.001 |
-
-# | API calls | 33.0 | 4.0 | 8.2x | <0.001 |
-
-# | Active days | 232.0 | 34.0 | 6.8x | <0.001 |
-
-# | Total events | 279.0 | 39.0 | 7.2x | <0.001 |
-
-# | Unique features | 8.0 | 8.0 | 1.0x | <0.001 |
-
-# 
-
-# \*\*Notable:\*\* Feature variety shows no difference between active and churned customers. Customers who churn explored the same breadth of features — they simply never used any of them deeply enough to form usage habits.
-
-# 
-
-# \*\*Implication for product:\*\* The onboarding problem is not feature discovery. It is value realization depth. Get customers to use two or three features repeatedly rather than showing them everything once.
-
-# 
-
-# \---
-
-# 
-
-# \### Finding 5 — Technical issues drive more churn than price
-
-# 
-
-# | Churn Reason | Customers | Share |
-
-# |---|---|---|
-
-# | Technical issues | 85 | \*\*12.4%\*\* |
-
-# | Missing features | 76 | 11.1% |
-
-# | Switched to competitor | 75 | 11.0% |
-
-# | Too expensive | 70 | 10.2% |
-
-# | No longer needed | 70 | 10.2% |
-
-# | Poor support | 65 | 9.5% |
-
-# 
-
-# Most SaaS companies optimize for pricing flexibility to reduce churn. This data suggests product stability is the higher-leverage intervention.
-
-# 
-
-# \---
-
-# 
-
-# \### Finding 6 — Channel quality creates a three-way tradeoff
-
-# 
-
-# | Channel | Churn Rate | Avg MRR | LTV | Quality Score |
-
-# |---|---|---|---|---|
-
-# | Partner | \*\*4.32%\*\* ✅ | $310 | $2,433 | 556 |
-
-# | Paid Google | 5.31% | $311 | $2,561 | \*\*577\*\* ✅ |
-
-# | Paid LinkedIn | 5.77% | \*\*$331\*\* ✅ | \*\*$3,237\*\* ✅ | 560 |
-
-# | Cold Outbound | 6.15% | $320 | $3,282 | 556 |
-
-# | Referral | 6.11% | $314 | $2,472 | 537 |
-
-# 
-
-# No single channel dominates all three dimensions simultaneously. The optimal channel mix depends on whether the business is optimizing for churn reduction, revenue per account, or customer lifetime value.
-
-# 
-
-# \---
-
-# 
-
-# \## Business Recommendations
-
-# 
-
-# | Priority | Finding | Recommendation | Est. ARR Impact |
-
-# |---|---|---|---|
-
-# | P0 | 49% MRR behaviorally at risk | Weekly Revenue at Risk report; CS team works from prioritised health score list | $21M protected |
-
-# | P1 | SMB churn 7.9% | Build automated low-touch re-engagement for SMB (email sequences, in-app nudges, health score triggers) | \~$170K saved |
-
-# | P1 | Annual churn > monthly | Mandatory 90-day value realization program for all annual customers | \~$196K saved |
-
-# | P2 | Technical issues = #1 reason | Shift product roadmap priority toward stability before new feature development | Reduce churn 1–2% |
-
-# | P2 | API adoption predicts retention | Redesign onboarding to drive API activation in first 14 days | Improve health scores |
-
-# | P3 | Partner channel lowest churn | Expand partner ecosystem (marketplace listings, integration partnerships) | Improve cohort NRR |
-
-# 
-
-# \---
-
-# 
-
-# \## Visualizations
-
-# 
-
-# | Chart | Key Insight |
-
-# |---|---|
-
-# | outputs/01_churn_overview.png | SMB churn (7.9%) is 3x Enterprise (2.6%) |
-
-# | !\[MRR Analysis](outputs/02\_mrr\_analysis.png) | Enterprise plans = 77% of MRR despite 17% of customers |
-
-# | !\[Channel Performance](outputs/03\_channel\_performance.png) | Partner has lowest churn; Paid LinkedIn has highest LTV |
-
-# | !\[Annual vs Monthly](outputs/04\_annual\_vs\_monthly\_churn.png) | Annual billing churn exceeds monthly across all tiers |
-
-# | !\[Behavioral Signals](outputs/05\_behavioral\_analysis.png) | Active customers show 7–8x higher engagement across all signals |
-
-# 
-
-# \---
-
-# 
-
-# \## Reproduce Locally
-
-# 
-
-# \### Prerequisites
-
-# \- PostgreSQL 16+
-
-# \- Python 3.10+
-
-# \- Git
-
-# 
-
-# \### Setup
-
-# 
-
-# ```bash
-
-# \# Clone
-
-# git clone https://github.com/VinayDera/saas-churn-analytics.git
-
-# cd saas-churn-analytics
-
-# 
-
-# \# Environment
-
-# python -m venv venv
-
-# venv\\Scripts\\activate        # Windows
-
-# source venv/bin/activate     # Mac/Linux
-
-# 
-
-# \# Dependencies
-
-# pip install pandas numpy matplotlib seaborn scikit-learn \\
-
-# &#x20;           sqlalchemy psycopg2-binary faker jupyter scipy
-
-# 
-
-# \# Database
-
-# psql -U postgres -c "CREATE DATABASE saas\_churn;"
-
-# 
-
-# \# Generate data (\~5 minutes)
-
-# python src/generate\_data.py
-
-# 
-
-# \# Launch notebooks
-
-# jupyter notebook notebooks/
-
-# ```
-
-# 
-
-# \### Expected output after data generation
-
-# ```
-
-# dim\_dates         :    1,581 rows
-
-# dim\_channels      :        8 rows
-
-# dim\_plans         :        6 rows
-
-# dim\_customers     :   12,000 rows
-
-# fact\_subscriptions:   12,000 rows
-
-# fact\_events       :3,113,813 rows
-
-# ```
-
-# 
-
-# \---
-
-# 
-
-# \## Tech Stack
-
-# 
-
-# | Layer | Technology | Purpose |
-
-# |---|---|---|
-
-# | Database | PostgreSQL 16.13 | Star schema, SQL analysis |
-
-# | Language | Python 3.10 | Data generation, EDA, modeling |
-
-# | Data manipulation | pandas 2.3 | Transformation, feature engineering |
-
-# | Visualization | matplotlib, seaborn | Charts and dashboards |
-
-# | Statistical testing | scipy.stats | Significance validation |
-
-# | Notebooks | Jupyter | Interactive analysis |
-
-# | Version control | Git + GitHub | Code management |
-
-# 
-
-# \---
-
-# 
-
-# \## Project Status
-
-# 
-
-# \- \[x] Database schema design
-
-# \- \[x] Synthetic data generation (3.1M rows)
-
-# \- \[x] SQL analysis — 5 scripts
-
-# \- \[x] Python EDA — behavioral analysis + statistical tests
-
-# \- \[x] Visualizations — 5 charts
-
-# \- \[ ] Cohort retention analysis (in progress)
-
-# \- \[ ] RFM customer segmentation (in progress)
-
-# \- \[ ] A/B test simulation (upcoming)
-
-# \- \[ ] Churn prediction model (upcoming)
-
-# 
-
-# \---
-
-# 
-
-# \## Author
-
-# 
-
-# \*\*Vinay Dera\*\* — Junior Data Analyst  
-
-# \[LinkedIn](https://linkedin.com/in/dera-venkata-sai-vinay) · \[GitHub](https://github.com/VinayDera) · vinaydera555@gmail.com
-
+[LinkedIn](https://linkedin.com/in/dera-venkata-sai-vinay) · [GitHub](https://github.com/VinayDera) · vinaydera555@gmail.com
