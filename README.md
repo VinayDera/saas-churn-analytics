@@ -34,9 +34,9 @@ Working with a simulated B2B SaaS environment (SubscribeIQ — fictional), this 
 | Product Events Analyzed | 3,113,813 |
 | Analysis Period | Jan 2022 – Apr 2026 |
 
----
-
 ## Project Structure
+
+```text
 saas-churn-analytics/
 ├── src/
 │   └── generate_data.py              # Synthetic data generation
@@ -45,7 +45,7 @@ saas-churn-analytics/
 │   ├── 02_mrr_waterfall.sql          # MRR movements and NRR
 │   ├── 03_customer_health_score.sql  # Behavioral health scoring
 │   ├── 04_revenue_at_risk.sql        # Dollar-quantified risk
-│   └── 05_channel_performance.sql   # Acquisition channel quality
+│   └── 05_channel_performance.sql    # Acquisition channel quality
 ├── notebooks/
 │   ├── 01_eda.ipynb                  # EDA + behavioral analysis
 │   ├── 02_cohort_analysis.ipynb      # 12-month cohort heatmap
@@ -53,9 +53,7 @@ saas-churn-analytics/
 │   └── 04_churn_model.ipynb          # Logistic regression model
 ├── outputs/                          # All charts saved here
 └── README.md
-
----
-
+```
 ## Database Schema
 
 Star schema with 6 tables in PostgreSQL 16.
